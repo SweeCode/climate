@@ -1,0 +1,30 @@
+# Phase 0 infra. `docker compose -f infra/docker-compose.yml up` brings up PostGIS;
+# backend/frontend services are wired as their Dockerfiles land.
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: climate
+      POSTGRES_PASSWORD: climate
+      POSTGRES_DB: climate
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U climate"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # backend:
+  #   build: { context: .., dockerfile: infra/Dockerfile.backend }
+  #   command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+  #   environment:
+  #     CLIMATE_DATABASE_URL: postgresql+psycopg2://climate:climate@db:5432/climate
+  #   depends_on:
+  #     db: { condition: service_healthy }
+  #   ports: ["8000:8000"]
+
+volumes:
+  pgdata:

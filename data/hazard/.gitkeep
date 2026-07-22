@@ -1,0 +1,2 @@
+# Hazard footprint rasters (XWS / Copernicus windstorm, JRC flood, EFFIS wildfire).
+# Large binaries — kept out of git (see .gitignore). Fetched by data pipelines.
