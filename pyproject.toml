@@ -8,13 +8,18 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Ingestion + geospatial (hazard rasters, geocoding). Not needed to run engine tests.
+# Ingestion + geospatial (hazard rasters, geocoding). Not needed to run engine tests, and
+# deliberately NOT installed in the deployed image — only the offline hazard prep script
+# needs these, and it runs on a developer machine and writes results to the database.
 geo = [
     "pandas>=2.1",
     "rasterio>=1.3",
     "shapely>=2.0",
     "pyproj>=3.6",
     "openpyxl>=3.1",
+    "xarray>=2024.1",
+    "netCDF4>=1.6",
+    "scipy>=1.11",
 ]
 # API layer
 api = [
@@ -26,14 +31,16 @@ api = [
     "pydantic>=2.6",
     "pydantic-settings>=2.2",
     "python-multipart>=0.0.9",
+    "pillow>=10.2",
 ]
 dev = [
     "pytest>=8.0",
     "ruff>=0.3",
+    "httpx>=0.27",  # starlette's TestClient transport, used by tests/test_api.py
 ]
 
 [tool.setuptools]
-packages = ["engine", "engine.scenario", "engine.perils", "data", "data.ingest", "backend", "backend.app"]
+packages = ["engine", "engine.scenario", "engine.perils", "data", "data.ingest", "backend", "backend.app", "backend.app.api", "backend.app.models"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

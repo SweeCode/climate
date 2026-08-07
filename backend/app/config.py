@@ -11,5 +11,13 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg2://climate:climate@localhost:5432/climate"
     hazard_dir: str = "data/hazard"
 
+    # Shared code gating the hosted demo. This is a doormat, not a lock — it keeps the demo
+    # from being casually crawled, and is NOT authentication. Real client bordereaux must not
+    # be uploaded to an environment protected only by this.
+    demo_access_code: str = ""
+
+    # Directory holding the built React bundle, mounted at / when present.
+    frontend_dist: str = "frontend/dist"
+
 
 settings = Settings()
