@@ -21,8 +21,7 @@ from __future__ import annotations
 import csv
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Optional
+from enum import StrEnum
 
 from engine.scenario.core import Location
 
@@ -35,10 +34,10 @@ KNOWN_COUNTRIES = {
     "CZ", "AT", "CH", "ES", "PT", "IT", "SI", "SK", "HU",
 }
 
-Geocoder = Callable[[Mapping[str, str]], Optional[tuple[float, float]]]
+Geocoder = Callable[[Mapping[str, str]], tuple[float, float] | None]
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     ERROR = "error"  # row cannot be used in a scenario
     WARNING = "warning"  # row is usable but suspect
 
@@ -76,7 +75,7 @@ class IngestionReport:
         )
 
 
-def _to_float(value: Optional[str]) -> Optional[float]:
+def _to_float(value: str | None) -> float | None:
     if value is None:
         return None
     value = value.strip()
@@ -99,7 +98,7 @@ def _vuln_key(row: Mapping[str, str]) -> str:
 
 def ingest_oed_locations(
     rows: Iterable[Mapping[str, str]],
-    geocode: Optional[Geocoder] = None,
+    geocode: Geocoder | None = None,
 ) -> tuple[list[Location], IngestionReport]:
     """Ingest OED location rows into engine Locations + a validation report.
 
@@ -172,7 +171,7 @@ def ingest_oed_locations(
     return locations, report
 
 
-def from_csv(path: str, geocode: Optional[Geocoder] = None):
+def from_csv(path: str, geocode: Geocoder | None = None):
     """Read an OED location CSV and ingest it. Standard-library only."""
     with open(path, newline="", encoding="utf-8-sig") as fh:
         reader = csv.DictReader(fh)

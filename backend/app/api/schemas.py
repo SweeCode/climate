@@ -40,7 +40,7 @@ class ReportOut(BaseModel):
     issues: list[IssueOut]
 
     @classmethod
-    def from_report(cls, report: IngestionReport, max_issues: int = 200) -> "ReportOut":
+    def from_report(cls, report: IngestionReport, max_issues: int = 200) -> ReportOut:
         return cls(
             total_rows=report.total_rows,
             loaded=report.loaded,

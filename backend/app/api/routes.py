@@ -18,10 +18,6 @@ from fastapi.responses import Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from backend.app.config import settings
-from backend.app.db import get_session
-from backend.app.hazard import bounds, get_storm, render_png, to_footprint
-from backend.app.models.oed import LocationRow, Portfolio, ScenarioRun, StormFootprint
 from backend.app.api.schemas import (
     LocationLossOut,
     LocationOut,
@@ -33,6 +29,10 @@ from backend.app.api.schemas import (
     WhatIfOut,
     WhatIfRequest,
 )
+from backend.app.config import settings
+from backend.app.db import get_session
+from backend.app.hazard import bounds, get_storm, render_png, to_footprint
+from backend.app.models.oed import LocationRow, Portfolio, ScenarioRun, StormFootprint
 from data.ingest.oed_pipeline import IngestionReport, ingest_oed_locations
 from engine.perils import windstorm
 from engine.scenario.core import (

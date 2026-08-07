@@ -15,6 +15,7 @@ Run: python scripts/seed_placeholder_storms.py
 from __future__ import annotations
 
 import datetime as dt
+from itertools import pairwise
 
 import numpy as np
 
@@ -45,7 +46,7 @@ def _swath(track: list[tuple[float, float, float]], width_deg: float) -> np.ndar
     cos_lat = np.cos(np.radians(glat))
     field = np.zeros((N_ROWS, N_COLS), dtype=float)
 
-    for (lon0, lat0, peak0), (lon1, lat1, peak1) in zip(track, track[1:]):
+    for (lon0, lat0, peak0), (lon1, lat1, peak1) in pairwise(track):
         dlon = (lon1 - lon0) * np.cos(np.radians((lat0 + lat1) / 2))
         dlat = lat1 - lat0
         seg_len2 = dlon**2 + dlat**2

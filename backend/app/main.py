@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
 
     try:
         init_db()
-    except Exception:  # noqa: BLE001 - the app must still serve /health for the platform probe
+    except Exception:
         log.exception("Database init failed; API endpoints will error until the DB is reachable")
     yield
 

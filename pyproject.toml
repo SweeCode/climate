@@ -35,7 +35,7 @@ api = [
 ]
 dev = [
     "pytest>=8.0",
-    "ruff>=0.3",
+    "ruff>=0.16",  # floor matches the rule codes selected below
     "httpx>=0.27",  # starlette's TestClient transport, used by tests/test_api.py
 ]
 
@@ -49,3 +49,12 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+# Select explicitly rather than riding ruff's defaults. Those defaults widened in 0.16 and
+# broke CI on a release nobody here made — with the set named, a version bump can change how
+# a rule is implemented but not which rules the build enforces.
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "RUF"]
+# FastAPI's dependency injection *requires* calls in argument defaults (Depends, File, Form).
+# B008 is a true positive in ordinary Python and a false one for every route we will ever write.
+ignore = ["B008"]

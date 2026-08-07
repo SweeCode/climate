@@ -200,7 +200,9 @@ def convert(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     p.add_argument("path", help="path to an XWS footprint NetCDF under data/hazard/")
     p.add_argument("--inspect", action="store_true", help="print file structure and exit")
     p.add_argument("--gust-var", help="name of the gust variable, if auto-detection fails")

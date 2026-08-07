@@ -106,7 +106,7 @@ class GriddedFootprint:
         return out
 
     @classmethod
-    def from_geotiff(cls, path: str) -> "GriddedFootprint":  # pragma: no cover - needs [geo]
+    def from_geotiff(cls, path: str) -> GriddedFootprint:  # pragma: no cover - needs [geo]
         """Load a gust footprint from a GeoTIFF (XWS / Copernicus product).
 
         Deferred import so the core engine has no geospatial dependency.

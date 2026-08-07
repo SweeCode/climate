@@ -111,7 +111,7 @@ class Exposure:
     limits: np.ndarray  # inf where no limit
 
     @classmethod
-    def from_locations(cls, locations: list[Location]) -> "Exposure":
+    def from_locations(cls, locations: list[Location]) -> Exposure:
         if not locations:
             raise ValueError("exposure must contain at least one location")
         return cls(

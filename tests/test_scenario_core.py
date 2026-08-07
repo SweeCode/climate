@@ -7,6 +7,7 @@ vulnerability interpolation, financial terms, aggregation, and marginal impact.
 import numpy as np
 import pytest
 
+from engine.perils import windstorm
 from engine.scenario.core import (
     Exposure,
     Location,
@@ -14,7 +15,6 @@ from engine.scenario.core import (
     compute_scenario_loss,
     marginal_impact,
 )
-from engine.perils import windstorm
 
 
 class ConstantFootprint:

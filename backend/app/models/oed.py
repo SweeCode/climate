@@ -43,7 +43,7 @@ class Portfolio(Base):
     # page reload. Serialised shape mirrors data.ingest.oed_pipeline.IngestionReport.
     ingestion_report: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
-    locations: Mapped[list["LocationRow"]] = relationship(
+    locations: Mapped[list[LocationRow]] = relationship(
         back_populates="portfolio", cascade="all, delete-orphan"
     )
 

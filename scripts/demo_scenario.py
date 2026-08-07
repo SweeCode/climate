@@ -68,7 +68,7 @@ def main() -> None:
     print("\nScenario: synthetic Kyrill-like windstorm")
     print(f"{'Loc':>5} {'gust m/s':>9} {'TIV':>12} {'net loss':>14}")
     for loc_id, gust, tiv, net in zip(
-        result.loc_ids, result.intensities, exposure.tivs, result.net_loss
+        result.loc_ids, result.intensities, exposure.tivs, result.net_loss, strict=True
     ):
         print(f"{loc_id:>5} {gust:9.1f} {tiv:12,.0f} {net:14,.0f}")
     print(f"{'':>5} {'':>9} {'PORTFOLIO':>12} {result.total_net:14,.0f}")
