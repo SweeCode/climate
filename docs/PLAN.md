@@ -12,9 +12,12 @@ are what matter.
 
 This plan scopes the first buildable slice and the sequence after it.
 
-**Status (July 2026):** phases 0–4 are built — engine, OED ingestion, the interactive API, and
-the React/deck.gl UI, deployable as a single container. Real XWS footprints are the open item
-in phase 2; see `docs/GTM.md` for the commercial plan the demo now feeds.
+**Status (August 2026):** phases 0–4 are built — engine, OED ingestion, the interactive API,
+and the React/deck.gl UI, deployable as a single container, against a hosted Neon PostGIS
+database. Phase 2 is closed: the real XWS recalibrated footprints for Kyrill, Lothar and Daria
+are loaded, replacing the synthetic placeholders. See `docs/GTM.md` for the commercial plan the
+demo now feeds. Open: deploy to a public URL, and the Copernicus 1.6 km footprints as the
+documented resolution upgrade.
 
 **The calibration anchor already paid for itself.** Checking the v1 windstorm curve against
 Kyrill's ~€4.6bn insured market loss showed it was overstating damage by roughly 30–50x: it
@@ -24,6 +27,18 @@ terms stay small — a severe 50 m/s gust means ~1.5% mean damage ratio, not 45%
 `engine/perils/windstorm.py` is corrected and the order of magnitude is now pinned by a test.
 Loss levels remain indicative until fitted to real claims. This is exactly the failure mode
 worth catching before a demo rather than during one.
+
+**The same lesson repeated on geography.** The real XWS files turned out to name their
+rotated-pole axes plainly `lat`/`lon`, so the converter's rotation check — which looked for
+axes named `rlon`/`rlat` — read them as true coordinates and put Kyrill in the South Atlantic.
+Nothing raised an error; the gust values stayed entirely plausible. Rotation is now identified
+from CF metadata and the unrotation delegated to `pyproj` rather than hand-rolled trigonometry,
+whose sign and 180° conventions are exactly where this class of bug lives. The check that
+caught it is the one now built into the converter: a catalogued storm that produces no damaging
+cell over Europe is a conversion failure, not a quiet event. The three loaded footprints
+validate against the historical record independently — Kyrill peaks over the Randstad and the
+Ruhr, Lothar over Baden-Württemberg and northern France, Daria over the British Isles and the
+Low Countries, and all three leave Madrid alone.
 
 ### Decisions locked (from planning discussion)
 - **Product:** single focus — European insurance/reinsurance cat platform. Not a consumer app.

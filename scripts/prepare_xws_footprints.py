@@ -13,17 +13,23 @@ Two things make that non-trivial, and both are handled here rather than in the e
   2. The result is stored in Postgres, not on disk, because the deployment target has an
      ephemeral filesystem and hazard rasters are never committed.
 
+Download the footprints first — the repository is an open directory, no login:
+
+    curl -O https://www.europeanwindstorms.org/repository/Kyrill/Kyrill_biasMean.nc
+
+Save them under data/hazard/ (gitignored). Each storm directory offers several products;
+take `_biasMean`, the recalibrated footprint. `_rawFoot` is the direct 25 km model output,
+which cannot resolve peak gusts and gives 32-40 m/s maxima where the recalibrated field gives
+51-77 — using it would understate every loss on the book. `_biasL95`/`_biasU95` are the
+recalibration's confidence bounds and are the natural input to an uncertainty band later.
+
 Usage:
     # 1. See what is actually in the file before converting anything
-    python scripts/prepare_xws_footprints.py --inspect data/hazard/kyrill.nc
+    python scripts/prepare_xws_footprints.py --inspect data/hazard/Kyrill_biasMean.nc
 
     # 2. Convert and load
-    python scripts/prepare_xws_footprints.py data/hazard/kyrill.nc \\
+    python scripts/prepare_xws_footprints.py data/hazard/Kyrill_biasMean.nc \\
         --slug kyrill-2007 --name Kyrill --year 2007 --date 2007-01-18
-
-Download the footprints first (free, no cost, but manual):
-    https://www.europeanwindstorms.org/  ->  Database  ->  pick a storm  ->  footprint NetCDF
-Save them under data/hazard/ (gitignored).
 """
 
 from __future__ import annotations
@@ -40,8 +46,15 @@ CELL_DEG = 0.22
 LON_LEFT, LAT_TOP = -15.0, 62.0
 N_COLS, N_ROWS = 182, 118
 
-SOURCE = "XWS catalogue (Roberts et al. 2014), Met Office / Univ. of Reading / Univ. of Exeter"
-LICENCE = "CC BY 4.0"
+SOURCE = (
+    "XWS catalogue (Roberts et al. 2014), recalibrated footprint — "
+    "Met Office / Univ. of Reading / Univ. of Exeter"
+)
+LICENCE = (
+    "Copyright Met Office, University of Reading and University of Exeter. "
+    "Licensed under Creative Commons CC BY 4.0 International Licence "
+    "(https://creativecommons.org/licenses/by/4.0/)"
+)
 
 # Candidate names for the gust variable, most specific first. CF-compliant XWS files should
 # carry one of these; --inspect exists for when they do not.
@@ -87,54 +100,81 @@ def _true_coords(ds, gust):
     CF-compliant rotated-pole files usually carry 2-D auxiliary `longitude`/`latitude`
     coordinates, in which case no trigonometry is needed. If they do not, unrotate from the
     grid_mapping attributes.
+
+    Whether a grid is rotated is decided from CF metadata, never from the coordinate variable
+    names. The real XWS files name their rotated axes plainly `lat`/`lon` — reading those as
+    true coordinates puts Kyrill in the Atlantic off West Africa, and every downstream number
+    still looks perfectly reasonable.
     """
     for lon_name, lat_name in (("longitude", "latitude"), ("lon", "lat")):
         if lon_name in ds.variables and ds[lon_name].ndim == 2:
             return np.asarray(ds[lon_name]), np.asarray(ds[lat_name])
 
-    if "rlon" not in ds.variables and "rlat" not in ds.variables:
-        # Already a regular lon/lat grid.
-        lon_name = "longitude" if "longitude" in ds.variables else "lon"
-        lat_name = "latitude" if "latitude" in ds.variables else "lat"
-        lon1d, lat1d = np.asarray(ds[lon_name]), np.asarray(ds[lat_name])
-        return np.meshgrid(lon1d, lat1d)
+    lon1d, lat1d = _horizontal_axes(ds)
+    lon2d, lat2d = np.meshgrid(lon1d, lat1d)
 
-    rlon = np.asarray(ds["rlon"])
-    rlat = np.asarray(ds["rlat"])
-    pole_lon, pole_lat = _pole(ds)
-    rlon2d, rlat2d = np.meshgrid(rlon, rlat)
-    return _unrotate(rlon2d, rlat2d, pole_lon, pole_lat)
-
-
-def _pole(ds) -> tuple[float, float]:
-    """Rotated pole position, from the grid_mapping variable or the XWS documented default."""
-    for name in ("rotated_pole", "rotated_latitude_longitude", "crs"):
-        if name in ds.variables:
-            attrs = ds[name].attrs
-            lon = attrs.get("grid_north_pole_longitude")
-            lat = attrs.get("grid_north_pole_latitude")
-            if lon is not None and lat is not None:
-                return float(lon), float(lat)
-    print("note: no grid_mapping found; using the XWS documented pole (177.5E, 37.5N)")
-    return 177.5, 37.5
+    pole = _pole(ds, gust)
+    if pole is None:
+        return lon2d, lat2d  # genuinely a regular lon/lat grid
+    return _unrotate(lon2d, lat2d, *pole)
 
 
 def _unrotate(rlon, rlat, pole_lon, pole_lat):
-    """Rotated-pole grid coordinates -> true lon/lat, in degrees."""
-    rlon_r, rlat_r = np.radians(rlon), np.radians(rlat)
-    theta = np.radians(90.0 - pole_lat)
-    phi = np.radians(pole_lon)
+    """Rotated-pole grid coordinates -> true lon/lat, in degrees.
 
-    x = np.cos(rlon_r) * np.cos(rlat_r)
-    y = np.sin(rlon_r) * np.cos(rlat_r)
-    z = np.sin(rlat_r)
+    Delegated to pyproj rather than hand-rolled. Rotated-pole formulations differ in whether
+    the prime meridian is offset by 180 degrees and in the sign of the longitude term, and
+    picking the wrong variant produces a footprint that is smoothly, confidently wrong — it
+    lands in the southern hemisphere while every value in it stays perfectly plausible.
+    """
+    from pyproj import CRS, Transformer
 
-    xn = np.cos(theta) * x + np.sin(theta) * z
-    zn = -np.sin(theta) * x + np.cos(theta) * z
+    rotated = CRS.from_cf(
+        {
+            "grid_mapping_name": "rotated_latitude_longitude",
+            "grid_north_pole_latitude": pole_lat,
+            "grid_north_pole_longitude": pole_lon,
+        }
+    )
+    transformer = Transformer.from_crs(rotated, "EPSG:4326", always_xy=True)
+    return transformer.transform(rlon, rlat)
 
-    lon = np.degrees(np.arctan2(y, xn)) + np.degrees(phi)
-    lat = np.degrees(np.arcsin(np.clip(zn, -1.0, 1.0)))
-    return (lon + 180.0) % 360.0 - 180.0, lat
+
+def _horizontal_axes(ds):
+    """The 1-D x/y coordinate arrays, whatever this file calls them."""
+    for lon_name, lat_name in (("rlon", "rlat"), ("lon", "lat"), ("longitude", "latitude")):
+        if lon_name in ds.variables and lat_name in ds.variables:
+            return np.asarray(ds[lon_name]), np.asarray(ds[lat_name])
+    sys.exit("could not find horizontal coordinates; run --inspect to list them")
+
+
+def _pole(ds, gust) -> tuple[float, float] | None:
+    """Rotated pole position, or None if this grid is not rotated.
+
+    Follows the CF chain: the data variable's `grid_mapping` attribute names the variable
+    holding the projection, and `grid_mapping_name` says which projection it is.
+    """
+    candidates = [gust.attrs.get("grid_mapping")]
+    candidates += ["rotated_pole", "rotated_latitude_longitude", "crs"]
+
+    for name in candidates:
+        if not name or name not in ds.variables:
+            continue
+        attrs = ds[name].attrs
+        if attrs.get("grid_mapping_name") not in (None, "rotated_latitude_longitude"):
+            continue  # some other projection — not ours to unrotate
+        lon = attrs.get("grid_north_pole_longitude")
+        lat = attrs.get("grid_north_pole_latitude")
+        if lon is not None and lat is not None:
+            return float(lon), float(lat)
+
+    # No grid mapping. Fall back on the axes' own standard_name before trusting them: a file
+    # can carry grid_latitude/grid_longitude axes with the projection variable missing.
+    for axis in ("lat", "rlat", "latitude"):
+        if axis in ds.variables and ds[axis].attrs.get("standard_name") == "grid_latitude":
+            print("note: rotated axes but no grid_mapping; using the XWS pole (177.5E, 37.5N)")
+            return 177.5, 37.5
+    return None
 
 
 def _regrid(lons, lats, values) -> np.ndarray:
@@ -178,6 +218,17 @@ def convert(args: argparse.Namespace) -> None:
     )
     if grid.max() > 120:
         print("WARNING: peak gust looks too high — is the source in km/h rather than m/s?")
+
+    # Refuse a footprint that missed Europe. A mis-read projection does not produce an obvious
+    # error — it lands the source grid outside the target domain, every cell interpolates to
+    # NaN, and the zeros that replace them look exactly like "this storm spared your book".
+    # An XWS storm is in the catalogue *because* it was damaging, so an empty domain is a
+    # conversion failure, not a quiet event.
+    if not (grid > 25.0).any():
+        sys.exit(
+            "no cell above 25 m/s anywhere in the target domain — the source grid did not "
+            "land on Europe. Check the projection with --inspect; do not load this."
+        )
 
     init_db()
     with SessionLocal() as session:

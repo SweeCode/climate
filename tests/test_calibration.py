@@ -34,7 +34,11 @@ KYRILL_INSURED_EUR = 4.6e9
 # not a tolerance.
 EXPOSED_VALUE_EUR = 1.0e13
 
-# Population-weighted gust over that area — the damaging band, not the peak.
+# Population-weighted gust over that area — the damaging band, not the peak. Originally a
+# guess; since the real XWS Kyrill footprint landed it is measured: across the cells above
+# 25 m/s the recalibrated footprint has mean 29.5 and p90 34.2 m/s, against a domain peak of
+# 51.2. Exposure concentrates toward the stronger end of that band, so 35 is a fair
+# characteristic value rather than a convenient one.
 CHARACTERISTIC_GUST_MS = 35.0
 
 

@@ -76,23 +76,36 @@ cd frontend && npm install && npm run dev            # UI on :5173, proxies /api
 
 ### Hazard data
 
-`scripts/seed_placeholder_storms.py` seeds **synthetic** footprints shaped along the real
-tracks of Kyrill, Lothar and Daria, so the app runs before any download. They are labelled as
-placeholders in the database and that label renders in the UI — never present them as
-modelled footprints.
-
-For real data, download footprints from the [XWS catalogue](https://www.europeanwindstorms.org/)
-(CC BY 4.0, commercial use permitted with attribution) into `data/hazard/`, then:
+Real footprints come from the [XWS catalogue](https://www.europeanwindstorms.org/) — 50
+extreme European windstorms, CC BY 4.0, commercial use permitted with attribution. The
+repository is an open directory, so no registration is needed:
 
 ```bash
 pip install -e ".[geo]"
-python scripts/prepare_xws_footprints.py --inspect data/hazard/kyrill.nc
-python scripts/prepare_xws_footprints.py data/hazard/kyrill.nc \
+cd data/hazard
+for s in Kyrill Lothar Daria; do
+    curl -O "https://www.europeanwindstorms.org/repository/$s/${s}_biasMean.nc"
+done
+cd ../..
+
+python scripts/prepare_xws_footprints.py data/hazard/Kyrill_biasMean.nc \
     --slug kyrill-2007 --name Kyrill --year 2007 --date 2007-01-18
 ```
 
-XWS footprints sit on a rotated-pole grid; the converter unrotates and regrids them offline so
-the runtime sampler stays a regular-grid lookup.
+Take the `_biasMean` product — the footprint recalibrated against station observations.
+`_rawFoot` is the direct 25 km model output, which cannot resolve peak gusts: it maxes out at
+32–40 m/s where the recalibrated field reaches 51–77, so it understates every loss on the
+book.
+
+XWS footprints sit on a rotated-pole grid, and the axes are named plainly `lat`/`lon` despite
+being rotated — the converter identifies the rotation from CF metadata and delegates the
+unrotation to `pyproj`, offline, so the runtime sampler stays a regular-grid lookup. It
+refuses to load a footprint with no damaging cell in the European domain, which is what a
+misread projection produces.
+
+`scripts/seed_placeholder_storms.py` seeds **synthetic** track-shaped footprints instead, for
+running the app before any download. They are labelled as placeholders in the database and
+that label renders in the UI — never present them as modelled footprints.
 
 ## Deploying
 
