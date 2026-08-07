@@ -1,17 +1,44 @@
-/**
- * Placeholder shell. Phase 4 fills this with: OED upload + ingestion report,
- * an accumulation heatmap (deck.gl / MapLibre), and the account what-if panel
- * that shows marginal PML/AAL impact — the underwriting wedge.
- */
+/** Routes: the pitch at /, the tool at /app. */
+
+import { Suspense, lazy } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+
+import { Landing } from "./routes/Landing";
+import "./styles.css";
+
+// deck.gl + MapLibre are ~1.8 MB. The landing page is the first thing a prospect loads, on a
+// free-tier host that may have just cold-started, so it must not wait for the map engine.
+const Studio = lazy(() => import("./routes/Studio").then((m) => ({ default: m.Studio })));
+
 export function App() {
   return (
-    <main style={{ fontFamily: "system-ui, sans-serif", padding: "2rem", maxWidth: 720 }}>
-      <h1>Climate — European Cat Platform</h1>
-      <p>
-        Underwriting-first catastrophe risk. Upload an OED portfolio, run a windstorm
-        scenario, and see what binding an account does to your accumulation.
-      </p>
-      <p style={{ color: "#888" }}>Phase 4 UI — coming next. Engine + ingestion are live.</p>
-    </main>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route
+          path="/app"
+          element={
+            <Suspense fallback={<Booting />}>
+              <Studio />
+            </Suspense>
+          }
+        >
+        </Route>
+        <Route path="*" element={<Landing />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function Booting() {
+  return (
+    <div className="gate grid-ground">
+      <div style={{ textAlign: "center" }}>
+        <span className="spinner" />
+        <div className="eyebrow" style={{ marginTop: "0.75rem" }}>
+          Loading map engine
+        </div>
+      </div>
+    </div>
   );
 }

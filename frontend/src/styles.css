@@ -1,0 +1,700 @@
+/*
+ * Design language: synoptic chart meets trading instrument.
+ *
+ * The premise of the product is that a startup beats the incumbents on speed and UX, so the
+ * interface has to look like a precision instrument, not like the grey form-stacks this market
+ * is used to. Cold, dark, hairline-ruled, tabular figures everywhere.
+ *
+ * Colour carries meaning and nothing else: the palette is cold slate until there is hazard or
+ * loss, at which point it runs amber -> red. Chartreuse is reserved exclusively for the
+ * candidate account, so the eye always knows which points are the new risk.
+ */
+
+:root {
+  --ink-900: #080b11;
+  --ink-850: #0b0f17;
+  --ink-800: #10151f;
+  --ink-700: #161c29;
+  --ink-600: #1e2636;
+  --ink-500: #2a3446;
+
+  --line: rgba(148, 168, 200, 0.14);
+  --line-strong: rgba(148, 168, 200, 0.28);
+
+  --text: #e8edf6;
+  --text-dim: #93a1ba;
+  --text-faint: #5d6a82;
+
+  /* Hazard / loss ramp — matches the footprint PNG ramp rendered server-side. */
+  --heat-1: #ffeda0;
+  --heat-2: #feb24c;
+  --heat-3: #fc4e2a;
+  --heat-4: #bd0026;
+
+  --cold: #5b8fc9;
+  --candidate: #c6f24e;
+
+  --font-display: "Newsreader", Georgia, serif;
+  --font-ui: "Archivo", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --rail: 21rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ink-900);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Faint chart grid + grain: gives the dark ground some atmosphere so it reads as a chart
+   surface rather than an empty div. */
+.grid-ground {
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 64px 64px, 64px 64px;
+  background-position: -1px -1px;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+button {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn {
+  background: var(--ink-600);
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  padding: 0.55rem 0.9rem;
+  font-weight: 500;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--ink-500);
+  border-color: var(--cold);
+}
+
+.btn-primary {
+  background: var(--text);
+  color: var(--ink-900);
+  border: 1px solid var(--text);
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #fff;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+  padding: 0.45rem 0.75rem;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+/* ---------------------------------------------------------------- landing */
+
+.landing {
+  min-height: 100%;
+  background:
+    radial-gradient(1100px 520px at 78% -8%, rgba(252, 78, 42, 0.16), transparent 62%),
+    radial-gradient(900px 480px at 12% 8%, rgba(91, 143, 201, 0.13), transparent 60%),
+    var(--ink-900);
+}
+
+.landing-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 2rem 6rem;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.wordmark span {
+  color: var(--heat-3);
+}
+
+.hero {
+  padding: 6.5rem 0 4rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 4rem;
+  align-items: end;
+}
+
+.hero h1 {
+  font-size: clamp(2.6rem, 6vw, 4.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--heat-2);
+}
+
+.hero p.lede {
+  margin: 1.75rem 0 0;
+  font-size: 1.05rem;
+  color: var(--text-dim);
+  max-width: 46ch;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 2.25rem;
+  flex-wrap: wrap;
+}
+
+/* Hard numbers, set as a spec sheet. This is what a numerate buyer actually reads. */
+.spec {
+  border-top: 1px solid var(--line-strong);
+}
+
+.spec-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.spec-row dt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.spec-row dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.section {
+  padding: 4.5rem 0 0;
+}
+
+.section h2 {
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+  letter-spacing: -0.02em;
+  max-width: 24ch;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1px;
+  margin-top: 2.5rem;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.step {
+  background: var(--ink-850);
+  padding: 1.75rem 1.5rem 2rem;
+}
+
+.step .n {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--heat-3);
+  letter-spacing: 0.1em;
+}
+
+.step h3 {
+  font-size: 1.15rem;
+  margin: 0.75rem 0 0.6rem;
+}
+
+.step p {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2.5rem;
+  margin-top: 2.5rem;
+}
+
+.split p {
+  color: var(--text-dim);
+  margin: 0 0 1rem;
+}
+
+.callout {
+  border-left: 2px solid var(--heat-3);
+  padding: 0.25rem 0 0.25rem 1.25rem;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  line-height: 1.45;
+}
+
+.foot {
+  margin-top: 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+/* Staggered entrance. One orchestrated load beats scattered micro-animations. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------- studio */
+
+.studio {
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr) var(--rail);
+  height: 100%;
+  overflow: hidden;
+}
+
+.rail {
+  background: var(--ink-850);
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.rail-right {
+  border-right: none;
+  border-left: 1px solid var(--line);
+}
+
+.rail-head {
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--ink-850);
+  z-index: 2;
+}
+
+.panel {
+  padding: 1.15rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.map-wrap {
+  position: relative;
+  background: var(--ink-900);
+}
+
+.map-overlay {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 1;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.attrib {
+  font-size: 10px;
+  color: var(--text-faint);
+  background: rgba(8, 11, 17, 0.82);
+  border: 1px solid var(--line);
+  padding: 0.35rem 0.55rem;
+  max-width: 34ch;
+  line-height: 1.35;
+}
+
+.legend {
+  background: rgba(8, 11, 17, 0.82);
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.6rem;
+}
+
+.legend-bar {
+  height: 6px;
+  width: 150px;
+  background: linear-gradient(
+    90deg,
+    var(--heat-1),
+    var(--heat-2),
+    var(--heat-3),
+    var(--heat-4)
+  );
+}
+
+.legend-scale {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-faint);
+  margin-top: 3px;
+}
+
+/* --------------------------------------------------------- numbers & data */
+
+.stat {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.stat:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.35rem;
+  margin-top: 0.15rem;
+  letter-spacing: -0.02em;
+}
+
+.stat-value.hot {
+  color: var(--heat-2);
+}
+
+.stat-value.huge {
+  font-size: 2rem;
+  color: var(--candidate);
+}
+
+.delta-bar {
+  height: 26px;
+  display: flex;
+  border: 1px solid var(--line-strong);
+  margin: 0.6rem 0 0.35rem;
+  overflow: hidden;
+}
+
+.delta-bar .before {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--ink-500),
+    var(--ink-500) 4px,
+    var(--ink-600) 4px,
+    var(--ink-600) 8px
+  );
+}
+
+.delta-bar .added {
+  background: var(--candidate);
+  transition: width 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------------------------------------------------------------- tables */
+
+.issues {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+
+.issues th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-weight: 500;
+  padding: 0.35rem 0.4rem 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.issues td {
+  padding: 0.4rem 0.4rem 0.4rem 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-dim);
+  vertical-align: top;
+}
+
+.issues td.id {
+  font-family: var(--font-mono);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.sev {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+
+.sev-error {
+  color: var(--heat-3);
+}
+
+.sev-warning {
+  color: var(--heat-2);
+}
+
+.scroll-cap {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+/* ---------------------------------------------------------------- misc */
+
+.storm-btn {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 0.65rem 0.75rem;
+  color: var(--text-dim);
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.storm-btn:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+.storm-btn[aria-pressed="true"] {
+  border-color: var(--heat-3);
+  background: rgba(252, 78, 42, 0.09);
+  color: var(--text);
+}
+
+.storm-btn .yr {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.storm-btn .nm {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+
+.dropzone {
+  border: 1px dashed var(--line-strong);
+  padding: 1.4rem 1rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 12.5px;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.dropzone.over {
+  border-color: var(--candidate);
+  background: rgba(198, 242, 78, 0.06);
+  color: var(--text);
+}
+
+textarea {
+  width: 100%;
+  background: var(--ink-900);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 0.6rem;
+  border-radius: 2px;
+  resize: vertical;
+}
+
+textarea:focus,
+input:focus {
+  outline: 1px solid var(--cold);
+  outline-offset: -1px;
+}
+
+input[type="password"],
+input[type="text"] {
+  width: 100%;
+  background: var(--ink-900);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-family: var(--font-mono);
+  padding: 0.55rem 0.65rem;
+  border-radius: 2px;
+}
+
+.notice {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--heat-2);
+  padding: 0.6rem 0.7rem;
+  line-height: 1.45;
+}
+
+.notice.error {
+  border-left-color: var(--heat-3);
+  color: var(--heat-2);
+}
+
+.gate {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.gate-card {
+  width: min(24rem, 100%);
+  border: 1px solid var(--line);
+  background: var(--ink-850);
+  padding: 2rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--line-strong);
+  border-top-color: var(--heat-2);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+  vertical-align: -1px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1100px) {
+  .studio {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 60vh auto;
+    height: auto;
+    overflow: visible;
+  }
+  .rail,
+  .rail-right {
+    border: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero {
+    grid-template-columns: 1fr;
+    padding-top: 3.5rem;
+  }
+}
