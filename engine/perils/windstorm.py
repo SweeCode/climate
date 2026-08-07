@@ -11,11 +11,29 @@ below samples them. Loading real rasters needs the `[geo]` extra (rasterio/xarra
 grid math here is dependency-free so the engine and its tests run without it.
 
 Vulnerability: a v1 gust-speed -> mean-damage-ratio curve. Buildings take essentially no
-damage below ~20 m/s, damage rises steeply through the 25-45 m/s band, and saturates
-approaching total loss at extreme gusts. This is a deliberately simple starting curve
-shaped after published European wind damage models (e.g. Prahl et al.; the high-resolution
-European wind damage model, Nature Sci. Rep. 2020) — the proprietary-refinement layer will
-replace it with construction/occupancy-specific fits.
+damage below ~20 m/s and damage rises steeply, roughly with a high power of the gust excess
+above that threshold.
+
+The values below are SMALL, and that is the point. European windstorm literature (Schwierz
+et al. 2010 and the work built on it) decomposes vulnerability as
+
+    MDR = MDD x PAA
+
+where MDD is the mean damage degree among affected buildings and PAA is the proportion of
+buildings affected at all. Both are well below 1 even in a severe storm: at ~50 m/s something
+like 10-25% of buildings suffer any damage, and those that do lose on the order of 5-10% of
+their value — so MDR lands near 1-2%, not near total loss. The numbers here are that product.
+
+Windstorm is an accumulation peril because one event touches an entire region at once, not
+because it destroys the buildings it touches. A curve that saturates near 1.0 confuses the two
+and overstates losses by one to two orders of magnitude.
+
+Calibration status: these are order-of-magnitude values reasoned from the MDD/PAA
+decomposition and cross-checked against European market losses (Kyrill 2007, ~EUR 4.6bn
+insured across DE/UK/BE/NL). They are NOT fitted to claims experience, and the level should be
+treated as indicative until it is. `tests/test_scenario_core.py` pins the order of magnitude
+so a future edit cannot quietly restore an implausible curve. Fitting per construction and
+occupancy cohort is the proprietary-refinement layer.
 """
 
 from __future__ import annotations
@@ -27,10 +45,10 @@ from engine.scenario.core import Vulnerability
 PERIL = "windstorm"
 
 # v1 European windstorm vulnerability (residential/commercial blended).
-# Gust speed (m/s, 3-second gust at 10 m) -> mean damage ratio.
+# Gust speed (m/s, 3-second gust at 10 m) -> mean damage ratio (MDD x PAA), see module docstring.
 _GUST_MS = np.array([0, 20, 25, 30, 35, 40, 45, 50, 60, 70], dtype=float)
 _MDR = np.array(
-    [0.00, 0.00, 0.005, 0.02, 0.06, 0.14, 0.28, 0.45, 0.75, 0.95], dtype=float
+    [0.0, 0.0, 0.00005, 0.0003, 0.0012, 0.0035, 0.008, 0.015, 0.040, 0.075], dtype=float
 )
 
 DEFAULT_VULNERABILITY = Vulnerability(

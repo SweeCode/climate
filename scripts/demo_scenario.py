@@ -41,17 +41,17 @@ class SyntheticStorm:
 # A tiny OED portfolio across Europe (as it would arrive in a location file).
 PORTFOLIO_ROWS = [
     {"LocNumber": "LON", "CountryCode": "GB", "Latitude": "51.51", "Longitude": "-0.13",
-     "BuildingTIV": "5000000", "ContentsTIV": "1000000", "BITIV": "0", "LocDed": "50000"},
+     "BuildingTIV": "5000000", "ContentsTIV": "1000000", "BITIV": "0", "LocDed": "5000"},
     {"LocNumber": "PAR", "CountryCode": "FR", "Latitude": "48.85", "Longitude": "2.35",
-     "BuildingTIV": "4000000", "ContentsTIV": "800000", "BITIV": "0", "LocDed": "40000"},
+     "BuildingTIV": "4000000", "ContentsTIV": "800000", "BITIV": "0", "LocDed": "4000"},
     {"LocNumber": "CGN", "CountryCode": "DE", "Latitude": "50.94", "Longitude": "6.96",
-     "BuildingTIV": "6000000", "ContentsTIV": "1500000", "BITIV": "0", "LocDed": "60000"},
+     "BuildingTIV": "6000000", "ContentsTIV": "1500000", "BITIV": "0", "LocDed": "6000"},
     {"LocNumber": "AMS", "CountryCode": "NL", "Latitude": "52.37", "Longitude": "4.90",
-     "BuildingTIV": "3500000", "ContentsTIV": "700000", "BITIV": "0", "LocDed": "35000"},
+     "BuildingTIV": "3500000", "ContentsTIV": "700000", "BITIV": "0", "LocDed": "3500"},
     {"LocNumber": "MUC", "CountryCode": "DE", "Latitude": "48.14", "Longitude": "11.58",
-     "BuildingTIV": "4500000", "ContentsTIV": "900000", "BITIV": "0", "LocDed": "45000"},
+     "BuildingTIV": "4500000", "ContentsTIV": "900000", "BITIV": "0", "LocDed": "4500"},
     {"LocNumber": "MAD", "CountryCode": "ES", "Latitude": "40.42", "Longitude": "-3.70",
-     "BuildingTIV": "5000000", "ContentsTIV": "1000000", "BITIV": "0", "LocDed": "50000"},
+     "BuildingTIV": "5000000", "ContentsTIV": "1000000", "BITIV": "0", "LocDed": "5000"},
 ]
 
 
@@ -77,7 +77,7 @@ def main() -> None:
     new_account = Exposure.from_locations(
         ingest_oed_locations([{
             "LocNumber": "BRU", "CountryCode": "BE", "Latitude": "50.85", "Longitude": "4.35",
-            "BuildingTIV": "8000000", "ContentsTIV": "2000000", "BITIV": "0", "LocDed": "80000",
+            "BuildingTIV": "8000000", "ContentsTIV": "2000000", "BITIV": "0", "LocDed": "8000",
         }])[0]
     )
     impact = marginal_impact(result, new_account, storm, vulns)

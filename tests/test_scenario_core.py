@@ -93,12 +93,29 @@ def test_windstorm_gridded_footprint_samples_and_zeroes_outside():
 
 def test_windstorm_vulnerability_shape_is_sane():
     v = windstorm.DEFAULT_VULNERABILITY
-    # calm -> no damage; moderate gale -> some; extreme -> near total; monotonic
+    # calm -> no damage; rises with gust; monotonic throughout
     assert v.mdr(np.array([15.0]))[0] == 0.0
     assert 0.0 < v.mdr(np.array([35.0]))[0] < v.mdr(np.array([50.0]))[0] < 1.0
-    assert v.mdr(np.array([70.0]))[0] >= 0.9
     xs = np.linspace(0, 80, 50)
     assert np.all(np.diff(v.mdr(xs)) >= 0)
+
+
+def test_windstorm_damage_ratios_stay_in_the_right_order_of_magnitude():
+    """European windstorm does not destroy the buildings it touches.
+
+    MDR is the product of mean damage degree and proportion of assets affected, and both are
+    small even in a severe storm — a curve approaching total loss overstates the answer by one
+    to two orders of magnitude. Pinned here because it is the kind of error that is invisible
+    in a unit test of the engine and obvious to an underwriter reading the output.
+    """
+    v = windstorm.DEFAULT_VULNERABILITY
+
+    # A strong gale: damaging, but a small fraction of insured value.
+    assert 1e-4 < v.mdr(np.array([40.0]))[0] < 1e-2
+    # A severe European windstorm gust — roofs, not write-offs.
+    assert 1e-3 < v.mdr(np.array([50.0]))[0] < 5e-2
+    # Even at an extreme gust the mean damage ratio stays well away from total loss.
+    assert v.mdr(np.array([70.0]))[0] < 0.20
 
 
 def _flat():
