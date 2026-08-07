@@ -10,8 +10,20 @@ do to my accumulation?" in seconds. That's advice, not a regulatory filing, so t
 validation bar is low and the things a startup can actually win on — speed and UX —
 are what matter.
 
-Repo is greenfield (`/Users/viggo/projects/climate` is empty). This plan scopes the
-first buildable slice and the sequence after it.
+This plan scopes the first buildable slice and the sequence after it.
+
+**Status (July 2026):** phases 0–4 are built — engine, OED ingestion, the interactive API, and
+the React/deck.gl UI, deployable as a single container. Real XWS footprints are the open item
+in phase 2; see `docs/GTM.md` for the commercial plan the demo now feeds.
+
+**The calibration anchor already paid for itself.** Checking the v1 windstorm curve against
+Kyrill's ~€4.6bn insured market loss showed it was overstating damage by roughly 30–50x: it
+saturated near total loss at extreme gusts, which windstorm never does. European vulnerability
+decomposes as MDR = MDD × PAA (damage degree × *proportion of buildings affected*), and both
+terms stay small — a severe 50 m/s gust means ~1.5% mean damage ratio, not 45%. The curve in
+`engine/perils/windstorm.py` is corrected and the order of magnitude is now pinned by a test.
+Loss levels remain indicative until fitted to real claims. This is exactly the failure mode
+worth catching before a demo rather than during one.
 
 ### Decisions locked (from planning discussion)
 - **Product:** single focus — European insurance/reinsurance cat platform. Not a consumer app.

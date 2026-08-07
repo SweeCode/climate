@@ -1,0 +1,24 @@
+# Render blueprint. `render.com` -> New -> Blueprint -> point at this repo.
+#
+# Free tier caveat, worth knowing before a sales call: the instance sleeps after ~15 minutes
+# idle and takes ~50s to wake. Keep it warm with a free pinger (cron-job.org, UptimeRobot)
+# hitting /health every 10 minutes, and move to the paid instance the week you have a
+# scheduled prospect meeting — not before.
+#
+# The database is Neon's free tier (neon.tech), not Render's, because Render's free Postgres
+# expires after 30 days while Neon's free plan does not. Paste the Neon connection string
+# into CLIMATE_DATABASE_URL in the Render dashboard.
+
+services:
+  - type: web
+    name: climate-demo
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: frankfurt # European customers, European data residency
+    healthCheckPath: /health
+    envVars:
+      - key: CLIMATE_DATABASE_URL
+        sync: false # set in the dashboard — it is a secret
+      - key: CLIMATE_DEMO_ACCESS_CODE
+        sync: false # shared code for the private demo; empty means open
